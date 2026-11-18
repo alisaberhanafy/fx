@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>حاسبة الفيبو المصغرة</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800&family=Inter:wght@600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: #0b0e14;
+            color: #e2e8f0;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .num {
+            font-family: 'Inter', monospace;
+            direction: ltr;
+            display: inline-block;
+        }
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-3 sm:p-4">
+
+    <!-- اشعار النسخ السريع -->
+    <div id="toast" class="fixed top-4 left-1/2 -translate-x-1/2 z-50 hidden bg-emerald-500 text-slate-950 font-extrabold text-sm px-5 py-2.5 rounded-full shadow-2xl">
+        تم النسخ
+    </div>
+
+    <!-- البطاقة الرئيسية المطابقة للصورة -->
+    <div class="w-full max-w-md bg-[#131720] border border-[#2a3140] rounded-2xl shadow-2xl overflow-hidden">
+        
+        <!-- الشريط العلوي -->
+        <div class="bg-[#1b202c] border-b border-[#2a3140] px-4 py-3 flex items-center justify-between">
+            <h1 class="text-base sm:text-lg font-extrabold text-[#eab308] tracking-wide">
+                حاسبة الفيبو المصغرة
+            </h1>
+            <button type="button" onclick="togglePriceHelper()" id="toggleModeBtn"
+                class="text-xs font-bold bg-[#252c3b] hover:bg-[#313a4d] text-sky-400 px-2.5 py-1.5 rounded-lg border border-sky-500/30 transition">
+                حساب من السعر
+            </button>
+        </div>
+
+        <!-- محتوى الحاسبة -->
+        <div class="p-4 space-y-3">
+
+            <!-- الصف 1: النسبة + زر تطبيق -->
+            <div class="flex items-center justify-between gap-2 bg-[#181d28] p-2.5 rounded-xl border border-[#262d3d]">
+                <label for="inpPercent" class="text-sm font-bold text-slate-300 whitespace-nowrap">
+                    النسبة (%):
+                </label>
+                <div class="flex items-center gap-2">
+                    <input type="number" id="inpPercent" value="3.00" step="0.1" inputmode="decimal" oninput="calculate()"
+                        class="num w-24 text-center bg-[#0f131a] border border-slate-500 focus:border-sky-400 rounded-lg py-2 px-2 text-white font-extrabold text-base outline-none">
+                    <button type="button" onclick="calculate(true)"
+                        class="bg-[#0284c7] hover:bg-[#0369a1] active:scale-95 text-white font-bold text-sm px-4 py-2 rounded-lg shadow transition">
+                        تطبيق
+                    </button>
+                </div>
+            </div>
+
+            <!-- الصف 2: راس المال (USC) -->
+            <div class="flex items-center justify-between gap-3 px-2 py-1">
+                <label for="inpBalance" class="text-sm font-bold text-slate-300">
+                    راس المال (USC):
+                </label>
+                <input type="number" id="inpBalance" value="5149.10" step="10" inputmode="decimal" oninput="calculate()"
+                    class="num w-36 text-left bg-[#0f131a] border border-[#2a3140] focus:border-amber-400 rounded-lg py-1.5 px-3 text-white font-extrabold text-base outline-none">
+            </div>
+
+            <!-- الصف 3: المستهدف -->
+            <div class="flex items-center justify-between gap-3 px-2 py-1">
+                <span class="text-sm font-bold text-slate-300">المستهدف:</span>
+                <span id="outTarget" class="num text-base sm:text-lg font-extrabold text-[#eab308]">
+                    154.47 (3.0%)
+                </span>
+            </div>
+
+            <!-- الصف 4: فيبو (pts) -->
+            <div class="flex items-center justify-between gap-3 px-2 py-1">
+                <label for="inpFiboPts" class="text-sm font-bold text-slate-300">
+                    فيبو (pts):
+                </label>
+                <div class="flex items-center gap-1.5">
+                    <input type="number" id="inpFiboPts" value="13220" step="10" inputmode="numeric" oninput="calculate()"
+                        class="num w-28 text-left bg-[#0f131a] border border-[#2a3140] focus:border-cyan-400 rounded-lg py-1.5 px-3 text-[#22d3ee] font-extrabold text-base outline-none">
+                    <span class="num text-xs font-bold text-[#22d3ee]">pts</span>
+                </div>
+            </div>
+
+            <!-- حاسبة مساعدة سريعة لتحويل القمة والقاع الى نقاط (تظهر عند الطلب) -->
+            <div id="priceHelperBox" class="hidden bg-[#0f131a] border border-sky-500/30 rounded-xl p-3 space-y-2">
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <span class="block text-[11px] text-slate-400 mb-1">القمة / الدخول</span>
+                        <input type="number" id="inpPrice1" placeholder="2750.00" step="0.01" inputmode="decimal" oninput="calcPointsFromPrices()"
+                            class="num w-full bg-[#181d28] border border-slate-700 rounded-lg px-2.5 py-1.5 text-white text-sm font-bold outline-none">
+                    </div>
+                    <div>
+                        <span class="block text-[11px] text-slate-400 mb-1">القاع / الستوب</span>
+                        <input type="number" id="inpPrice2" placeholder="2617.80" step="0.01" inputmode="decimal" oninput="calcPointsFromPrices()"
+                            class="num w-full bg-[#181d28] border border-slate-700 rounded-lg px-2.5 py-1.5 text-white text-sm font-bold outline-none">
+                    </div>
+                </div>
+            </div>
+
+            <!-- الصف 5: قيمة النقاط -->
+            <div class="flex items-center justify-between gap-3 px-2 py-1">
+                <span class="text-sm font-bold text-slate-300">قيمة النقاط:</span>
+                <span id="outPointsVal" class="num text-base font-extrabold text-[#fb923c]">
+                    158.64 USC
+                </span>
+            </div>
+
+            <!-- الصف 6: الاسبريد -->
+            <div class="flex items-center justify-between gap-3 px-2 py-1">
+                <label for="inpSpread" class="text-sm font-bold text-slate-300">
+                    الاسبريد:
+                </label>
+                <div class="flex items-center gap-1.5">
+                    <input type="number" id="inpSpread" value="240" step="1" inputmode="numeric" oninput="calculate()"
+                        class="num w-24 text-left bg-[#0f131a] border border-[#2a3140] focus:border-amber-400 rounded-lg py-1.5 px-3 text-[#f59e0b] font-extrabold text-base outline-none">
+                    <span class="num text-xs font-bold text-[#f59e0b]">pts</span>
+                </div>
+            </div>
+
+            <!-- خانة اللوت الاساسي (زر نسخ كبير للموبايل) -->
+            <button type="button" onclick="copyLot('outLot')"
+                class="w-full flex items-center justify-between bg-[#17212b] hover:bg-[#1d2a36] active:scale-[0.99] border border-[#2d3b4d] rounded-xl px-4 py-3.5 transition shadow-md">
+                <span class="text-base font-extrabold text-slate-200">اللوت:</span>
+                <div class="flex items-center gap-2">
+                    <span id="outLot" class="num text-xl font-extrabold text-[#4ade80]">0.12 Lot</span>
+                    <span class="text-[11px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded font-bold">نسخ</span>
+                </div>
+            </button>
+
+            <!-- خانة ضعف اللوت (زر نسخ كبير للموبايل) -->
+            <button type="button" onclick="copyLot('outDoubleLot')"
+                class="w-full flex items-center justify-between bg-[#241922] hover:bg-[#2e202b] active:scale-[0.99] border border-[#422a38] rounded-xl px-4 py-3.5 transition shadow-md">
+                <span class="text-base font-extrabold text-slate-200">ضعف اللوت:</span>
+                <div class="flex items-center gap-2">
+                    <span id="outDoubleLot" class="num text-xl font-extrabold text-[#f87171]">0.24 Lot</span>
+                    <span class="text-[11px] bg-rose-500/20 text-rose-300 px-2 py-0.5 rounded font-bold">نسخ</span>
+                </div>
+            </button>
+
+        </div>
+    </div>
+
+    <script>
+        // تحميل القيم المحفوظة عند الفتح
+        window.addEventListener('DOMContentLoaded', () => {
+            try {
+                const saved = JSON.parse(localStorage.getItem('miniFiboCalc_v1'));
+                if (saved) {
+                    if (saved.percent) document.getElementById('inpPercent').value = saved.percent;
+                    if (saved.balance) document.getElementById('inpBalance').value = saved.balance;
+                    if (saved.fiboPts) document.getElementById('inpFiboPts').value = saved.fiboPts;
+                    if (saved.spread) document.getElementById('inpSpread').value = saved.spread;
+                }
+            } catch (e) {}
+            calculate();
+        });
+
+        // اظهار او اخفاء حاسبة تحويل السعر الى نقاط
+        function togglePriceHelper() {
+            const box = document.getElementById('priceHelperBox');
+            const btn = document.getElementById('toggleModeBtn');
+            const isHidden = box.classList.contains('hidden');
+            box.classList.toggle('hidden', !isHidden);
+            btn.textContent = isHidden ? 'اخفاء السعر' : 'حساب من السعر';
+        }
+
+        // تحويل فرق السعرين الى نقاط (1.00$ في الذهب = 100 نقطة)
+        function calcPointsFromPrices() {
+            const p1 = parseFloat(document.getElementById('inpPrice1').value);
+            const p2 = parseFloat(document.getElementById('inpPrice2').value);
+            if (!isNaN(p1) && !isNaN(p2) && p1 !== p2) {
+                const diff = Math.abs(p1 - p2);
+                // تحديد المضاعف تلقائيا حسب خانات السعر (ذهب 100، فوركس 100000، ين 1000)
+                let factor = 100;
+                if (p1 < 20) factor = 100000;
+                else if (p1 < 500) factor = 1000;
+                document.getElementById('inpFiboPts').value = Math.round(diff * factor);
+                calculate();
+            }
+        }
+
+        // المعادلة المطابقة للصورة تماما
+        function calculate(showAppliedToast = false) {
+            const percent = Math.max(0, parseFloat(document.getElementById('inpPercent').value) || 0);
+            const balance = Math.max(0, parseFloat(document.getElementById('inpBalance').value) || 0);
+            const fiboPts = Math.max(1, parseFloat(document.getElementById('inpFiboPts').value) || 1);
+            const spread = Math.max(0, parseFloat(document.getElementById('inpSpread').value) || 0);
+
+            // المستهدف = راس المال * النسبة %
+            const targetAmount = balance * (percent / 100);
+
+            // قيمة النقطة للوت الواحد في حساب السنت (XAUUSDc): 0.10 USC لكل نقطة
+            const pointValuePerLot = 0.10;
+
+            // اللوت = المستهدف / (فيبو بالنقاط * 0.10) مقرب لاقرب 0.01
+            const rawLot = targetAmount / (fiboPts * pointValuePerLot);
+            const lot = Math.max(0.01, Math.round(rawLot * 100) / 100);
+            const doubleLot = Math.round((lot * 2) * 100) / 100;
+
+            // قيمة النقاط الفعلية = فيبو بالنقاط * 0.10 * اللوت
+            const actualPointsValue = fiboPts * pointValuePerLot * lot;
+
+            // تحديث الواجهة
+            document.getElementById('outTarget').textContent = `${targetAmount.toFixed(2)} (${percent.toFixed(1)}%)`;
+            document.getElementById('outPointsVal').textContent = `${actualPointsValue.toFixed(2)} USC`;
+            document.getElementById('outLot').textContent = `${lot.toFixed(2)} Lot`;
+            document.getElementById('outDoubleLot').textContent = `${doubleLot.toFixed(2)} Lot`;
+
+            // حفظ القيم محليا
+            try {
+                localStorage.setItem('miniFiboCalc_v1', JSON.stringify({
+                    percent: document.getElementById('inpPercent').value,
+                    balance: document.getElementById('inpBalance').value,
+                    fiboPts: document.getElementById('inpFiboPts').value,
+                    spread: document.getElementById('inpSpread').value
+                }));
+            } catch (e) {}
+
+            if (showAppliedToast) {
+                showToast(`تم التحديث: ${lot.toFixed(2)} Lot`);
+            }
+        }
+
+        // نسخ رقم اللوت بضغطة واحدة
+        function copyLot(elementId) {
+            const rawText = document.getElementById(elementId).textContent;
+            const lotNumber = rawText.replace('Lot', '').trim();
+            const temp = document.createElement('input');
+            temp.value = lotNumber;
+            document.body.appendChild(temp);
+            temp.select();
+            document.execCommand('copy');
+            document.body.removeChild(temp);
+            showToast(`تم نسخ اللوت: ${lotNumber}`);
+        }
+
+        let toastTimeout;
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.classList.remove('hidden');
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 1800);
+        }
+    </script>
+</body>
+</html>
