@@ -4,260 +4,931 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>حاسبة الفيبو المصغرة</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800&family=Inter:wght@600;700;800&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Cairo', sans-serif;
-            background-color: #0b0e14;
-            color: #e2e8f0;
+        /* إعادة ضبط شاملة وتصميم داكن مستقل بالكامل بدون أي مكتبات خارجية قد تعطل العرض */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
             -webkit-tap-highlight-color: transparent;
         }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Tahoma, Arial, sans-serif;
+            background-color: #131722;
+            color: #e2e8f0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px;
+        }
+
         .num {
-            font-family: 'Inter', monospace;
+            font-family: "Consolas", "Monaco", "Courier New", monospace;
+            font-variant-numeric: tabular-nums;
             direction: ltr;
             display: inline-block;
         }
-        input[type="number"]::-webkit-inner-spin-button,
-        input[type="number"]::-webkit-outer-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
+
+        /* البطاقة الرئيسية */
+        .card {
+            width: 100%;
+            max-width: 420px;
+            background-color: #1e222d;
+            border: 1px solid #2a2e39;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.55);
+            overflow: hidden;
         }
-        input[type="number"] {
-            -moz-appearance: textfield;
+
+        /* الهيدر */
+        .header {
+            background-color: #181c26;
+            border-bottom: 1px solid #2a2e39;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .title {
+            color: #f0b90b;
+            font-size: 17px;
+            font-weight: 800;
+            letter-spacing: 0.3px;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-small {
+            background-color: #262b38;
+            color: #93c5fd;
+            border: 1px solid #363d4f;
+            border-radius: 8px;
+            padding: 6px 10px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        .btn-small:active {
+            transform: scale(0.96);
+        }
+
+        /* صندوق إعدادات API */
+        .api-box {
+            display: none;
+            background-color: #131722;
+            border-bottom: 1px solid #3b331d;
+            padding: 12px 16px;
+        }
+
+        .api-box.open {
+            display: block;
+        }
+
+        .api-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            margin-bottom: 8px;
+        }
+
+        .api-top span {
+            color: #f0b90b;
+            font-weight: 700;
+        }
+
+        .api-top a {
+            color: #38bdf8;
+            text-decoration: underline;
+            font-weight: 700;
+        }
+
+        .api-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        .api-input {
+            flex: 1;
+            background-color: #1e222d;
+            border: 1px solid #374151;
+            border-radius: 8px;
+            padding: 7px 10px;
+            color: #ffffff;
+            font-size: 12px;
+            outline: none;
+            direction: ltr;
+        }
+
+        .btn-save {
+            background-color: #059669;
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            padding: 7px 14px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .api-note {
+            font-size: 11px;
+            color: #94a3b8;
+            margin-top: 6px;
+        }
+
+        /* المحتوى */
+        .body-content {
+            padding: 14px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        /* زر رفع الصورة */
+        .btn-ai {
+            width: 100%;
+            background: linear-gradient(135deg, #0284c7, #2563eb);
+            color: #ffffff;
+            border: 1px solid #38bdf855;
+            border-radius: 11px;
+            padding: 11px 14px;
+            font-size: 14px;
+            font-weight: 800;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35);
+        }
+
+        .btn-ai:active {
+            transform: scale(0.98);
+        }
+
+        .ai-status {
+            display: none;
+            margin-top: 6px;
+            padding: 7px 10px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 700;
+            text-align: center;
+            background-color: #131722;
+            border: 1px solid #2a2e39;
+            color: #7dd3fc;
+        }
+
+        .ai-status.show {
+            display: block;
+        }
+
+        .ai-status.success {
+            color: #00e676;
+            border-color: #00e67644;
+        }
+
+        .ai-status.warn {
+            color: #fbbf24;
+            border-color: #fbbf2444;
+        }
+
+        /* صف النسبة */
+        .percent-box {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            background-color: #161a23;
+            border: 1px solid #2a2e39;
+            border-radius: 11px;
+            padding: 8px 10px;
+        }
+
+        .label {
+            font-size: 14px;
+            font-weight: 700;
+            color: #cbd5e1;
+            white-space: nowrap;
+        }
+
+        .percent-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .input-box {
+            background-color: #131722;
+            border: 1px solid #333947;
+            border-radius: 8px;
+            padding: 6px 10px;
+            color: #ffffff;
+            font-size: 16px;
+            font-weight: 800;
+            text-align: left;
+            outline: none;
+        }
+
+        .input-box:focus {
+            border-color: #38bdf8;
+        }
+
+        .w-percent {
+            width: 82px;
+        }
+
+        .w-balance {
+            width: 135px;
+        }
+
+        .w-fibo {
+            width: 105px;
+            color: #22d3ee;
+        }
+
+        .w-spread {
+            width: 85px;
+            color: #f59e0b;
+        }
+
+        .price-card {
+            background-color: #161a23;
+            border: 1px solid #2a3447;
+            border-radius: 12px;
+            padding: 10px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .price-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .price-input-wrap {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex: 1;
+            max-width: 215px;
+        }
+
+        .w-price {
+            width: 100%;
+            color: #38bdf8;
+            font-size: 16px;
+        }
+
+        .btn-clear {
+            background-color: #262b38;
+            color: #94a3b8;
+            border: 1px solid #363d4f;
+            border-radius: 8px;
+            width: 34px;
+            height: 34px;
+            font-size: 13px;
+            font-weight: 800;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .btn-clear:active {
+            background-color: #333a4b;
+            color: #ffffff;
+        }
+
+        .val-fibo-pts {
+            color: #22d3ee;
+            font-size: 16px;
+            font-weight: 800;
+        }
+
+        .btn-apply {
+            background-color: #0284c7;
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            padding: 7px 14px;
+            font-size: 14px;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        .btn-apply:active {
+            background-color: #0369a1;
+        }
+
+        /* صفوف البيانات */
+        .row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 3px 4px;
+        }
+
+        .val-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .unit-cyan {
+            color: #22d3ee;
+            font-size: 13px;
+            font-weight: 800;
+        }
+
+        .unit-orange {
+            color: #f59e0b;
+            font-size: 13px;
+            font-weight: 800;
+        }
+
+        .val-target {
+            color: #facc15;
+            font-size: 16px;
+            font-weight: 800;
+        }
+
+        .val-pts {
+            color: #fb923c;
+            font-size: 16px;
+            font-weight: 800;
+        }
+
+        /* صناديق النتائج (اللوت وضعف اللوت) */
+        .result-box {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 11px 14px;
+            border-radius: 12px;
+            cursor: pointer;
+            user-select: none;
+            transition: transform 0.1s, opacity 0.15s;
+        }
+
+        .result-box:active {
+            transform: scale(0.98);
+        }
+
+        .lot-box {
+            background-color: #162229;
+            border: 1px solid #00e67644;
+            margin-top: 2px;
+        }
+
+        .double-lot-box {
+            background-color: #241922;
+            border: 1px solid #ff525244;
+        }
+
+        .lot-val {
+            color: #00e676;
+            font-size: 20px;
+            font-weight: 800;
+        }
+
+        .double-lot-val {
+            color: #ff5252;
+            font-size: 20px;
+            font-weight: 800;
+        }
+
+        .copy-hint {
+            font-size: 11px;
+            color: #94a3b8;
+            background-color: rgba(255, 255, 255, 0.06);
+            padding: 3px 8px;
+            border-radius: 6px;
+            margin-right: 8px;
+        }
+
+        /* إشعار النسخ */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background-color: #00e676;
+            color: #09150e;
+            font-weight: 800;
+            font-size: 13px;
+            padding: 8px 18px;
+            border-radius: 999px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.2s ease;
+            z-index: 9999;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
         }
     </style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-3 sm:p-4">
+<body>
 
-    <!-- اشعار النسخ السريع -->
-    <div id="toast" class="fixed top-4 left-1/2 -translate-x-1/2 z-50 hidden bg-emerald-500 text-slate-950 font-extrabold text-sm px-5 py-2.5 rounded-full shadow-2xl">
-        تم النسخ
-    </div>
-
-    <!-- البطاقة الرئيسية المطابقة للصورة -->
-    <div class="w-full max-w-md bg-[#131720] border border-[#2a3140] rounded-2xl shadow-2xl overflow-hidden">
-        
+    <div class="card">
         <!-- الشريط العلوي -->
-        <div class="bg-[#1b202c] border-b border-[#2a3140] px-4 py-3 flex items-center justify-between">
-            <h1 class="text-base sm:text-lg font-extrabold text-[#eab308] tracking-wide">
-                حاسبة الفيبو المصغرة
-            </h1>
-            <button type="button" onclick="togglePriceHelper()" id="toggleModeBtn"
-                class="text-xs font-bold bg-[#252c3b] hover:bg-[#313a4d] text-sky-400 px-2.5 py-1.5 rounded-lg border border-sky-500/30 transition">
-                حساب من السعر
-            </button>
+        <div class="header">
+            <h1 class="title">حاسبة الفيبو المصغرة</h1>
+            <div class="header-actions">
+                <button type="button" class="btn-small" title="اعدادات الذكاء الاصطناعي" onclick="toggleApiSettings()">⚙️</button>
+            </div>
         </div>
 
-        <!-- محتوى الحاسبة -->
-        <div class="p-4 space-y-3">
+        <!-- اعدادات مفتاح Gemini API -->
+        <div class="api-box" id="apiBox">
+            <div class="api-top">
+                <span>مفتاح Gemini API (اختياري للدقة القصوى):</span>
+                <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">مفتاح مجاني</a>
+            </div>
+            <div class="api-row">
+                <input type="password" class="api-input" id="inpApiKey" placeholder="AIzaSy...">
+                <button type="button" class="btn-save" onclick="saveApiKey()">حفظ</button>
+            </div>
+            <div class="api-note">بدون مفتاح، تعمل الحاسبة تلقائيا بالمحرك المحلي لقراءة الارقام من الصورة.</div>
+        </div>
 
-            <!-- الصف 1: النسبة + زر تطبيق -->
-            <div class="flex items-center justify-between gap-2 bg-[#181d28] p-2.5 rounded-xl border border-[#262d3d]">
-                <label for="inpPercent" class="text-sm font-bold text-slate-300 whitespace-nowrap">
-                    النسبة (%):
-                </label>
-                <div class="flex items-center gap-2">
-                    <input type="number" id="inpPercent" value="3.00" step="0.1" inputmode="decimal" oninput="calculate()"
-                        class="num w-24 text-center bg-[#0f131a] border border-slate-500 focus:border-sky-400 rounded-lg py-2 px-2 text-white font-extrabold text-base outline-none">
-                    <button type="button" onclick="calculate(true)"
-                        class="bg-[#0284c7] hover:bg-[#0369a1] active:scale-95 text-white font-bold text-sm px-4 py-2 rounded-lg shadow transition">
-                        تطبيق
-                    </button>
+        <!-- جسم الحاسبة -->
+        <div class="body-content">
+
+            <!-- زر رفع لقطة الشاشة -->
+            <div>
+                <input type="file" id="chartInput" accept="image/*" style="display:none" onchange="handleImageUpload(event)">
+                <button type="button" class="btn-ai" onclick="document.getElementById('chartInput').click()">
+                    <span>📸 قراءة لقطة شاشة الفيبو (استخراج تلقائي)</span>
+                </button>
+                <div class="ai-status" id="aiStatus"></div>
+            </div>
+
+            <!-- النسبة + زر تطبيق -->
+            <div class="percent-box">
+                <label class="label" for="inpPercent">النسبة (%):</label>
+                <div class="percent-controls">
+                    <input type="number" class="input-box w-percent num" id="inpPercent" value="3.00" step="0.1" inputmode="decimal" oninput="calculate()">
+                    <button type="button" class="btn-apply" onclick="applyAndSave()">تطبيق</button>
                 </div>
             </div>
 
-            <!-- الصف 2: راس المال (USC) -->
-            <div class="flex items-center justify-between gap-3 px-2 py-1">
-                <label for="inpBalance" class="text-sm font-bold text-slate-300">
-                    راس المال (USC):
-                </label>
-                <input type="number" id="inpBalance" value="5149.10" step="10" inputmode="decimal" oninput="calculate()"
-                    class="num w-36 text-left bg-[#0f131a] border border-[#2a3140] focus:border-amber-400 rounded-lg py-1.5 px-3 text-white font-extrabold text-base outline-none">
+            <!-- راس المال (USC) -->
+            <div class="row">
+                <label class="label" for="inpBalance">راس المال (USC):</label>
+                <input type="number" class="input-box w-balance num" id="inpBalance" value="5149.10" step="10" inputmode="decimal" oninput="calculate()">
             </div>
 
-            <!-- الصف 3: المستهدف -->
-            <div class="flex items-center justify-between gap-3 px-2 py-1">
-                <span class="text-sm font-bold text-slate-300">المستهدف:</span>
-                <span id="outTarget" class="num text-base sm:text-lg font-extrabold text-[#eab308]">
-                    154.47 (3.0%)
-                </span>
-            </div>
-
-            <!-- الصف 4: فيبو (pts) -->
-            <div class="flex items-center justify-between gap-3 px-2 py-1">
-                <label for="inpFiboPts" class="text-sm font-bold text-slate-300">
-                    فيبو (pts):
-                </label>
-                <div class="flex items-center gap-1.5">
-                    <input type="number" id="inpFiboPts" value="13220" step="10" inputmode="numeric" oninput="calculate()"
-                        class="num w-28 text-left bg-[#0f131a] border border-[#2a3140] focus:border-cyan-400 rounded-lg py-1.5 px-3 text-[#22d3ee] font-extrabold text-base outline-none">
-                    <span class="num text-xs font-bold text-[#22d3ee]">pts</span>
-                </div>
-            </div>
-
-            <!-- حاسبة مساعدة سريعة لتحويل القمة والقاع الى نقاط (تظهر عند الطلب) -->
-            <div id="priceHelperBox" class="hidden bg-[#0f131a] border border-sky-500/30 rounded-xl p-3 space-y-2">
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <span class="block text-[11px] text-slate-400 mb-1">القمة / الدخول</span>
-                        <input type="number" id="inpPrice1" placeholder="2750.00" step="0.01" inputmode="decimal" oninput="calcPointsFromPrices()"
-                            class="num w-full bg-[#181d28] border border-slate-700 rounded-lg px-2.5 py-1.5 text-white text-sm font-bold outline-none">
+            <!-- طرفا الفيبوناتشي للصق المباشر من الموبايل -->
+            <div class="price-card">
+                <div class="price-row">
+                    <label class="label" for="inpPrice0">سعر فيبو 1:</label>
+                    <div class="price-input-wrap">
+                        <input type="text" class="input-box w-price num" id="inpPrice0" value="2650.00" placeholder="الصق السعر الاول" inputmode="decimal" oninput="calculate()">
+                        <button type="button" class="btn-clear" title="مسح" onclick="clearPrice('inpPrice0')">✕</button>
                     </div>
-                    <div>
-                        <span class="block text-[11px] text-slate-400 mb-1">القاع / الستوب</span>
-                        <input type="number" id="inpPrice2" placeholder="2617.80" step="0.01" inputmode="decimal" oninput="calcPointsFromPrices()"
-                            class="num w-full bg-[#181d28] border border-slate-700 rounded-lg px-2.5 py-1.5 text-white text-sm font-bold outline-none">
+                </div>
+                <div class="price-row">
+                    <label class="label" for="inpPrice100">سعر فيبو 2:</label>
+                    <div class="price-input-wrap">
+                        <input type="text" class="input-box w-price num" id="inpPrice100" value="2636.78" placeholder="الصق السعر الثاني" inputmode="decimal" oninput="calculate()">
+                        <button type="button" class="btn-clear" title="مسح" onclick="clearPrice('inpPrice100')">✕</button>
                     </div>
                 </div>
             </div>
 
-            <!-- الصف 5: قيمة النقاط -->
-            <div class="flex items-center justify-between gap-3 px-2 py-1">
-                <span class="text-sm font-bold text-slate-300">قيمة النقاط:</span>
-                <span id="outPointsVal" class="num text-base font-extrabold text-[#fb923c]">
-                    158.64 USC
-                </span>
+            <!-- المستهدف -->
+            <div class="row">
+                <span class="label">المستهدف:</span>
+                <span class="val-target num" id="outTarget">154.47 (3.0%)</span>
             </div>
 
-            <!-- الصف 6: الاسبريد -->
-            <div class="flex items-center justify-between gap-3 px-2 py-1">
-                <label for="inpSpread" class="text-sm font-bold text-slate-300">
-                    الاسبريد:
-                </label>
-                <div class="flex items-center gap-1.5">
-                    <input type="number" id="inpSpread" value="240" step="1" inputmode="numeric" oninput="calculate()"
-                        class="num w-24 text-left bg-[#0f131a] border border-[#2a3140] focus:border-amber-400 rounded-lg py-1.5 px-3 text-[#f59e0b] font-extrabold text-base outline-none">
-                    <span class="num text-xs font-bold text-[#f59e0b]">pts</span>
+            <!-- فيبو (pts) -->
+            <div class="row">
+                <span class="label">فيبو:</span>
+                <span class="val-fibo-pts num" id="outFiboPts">13220 pts</span>
+            </div>
+
+            <!-- قيمة النقاط -->
+            <div class="row">
+                <span class="label">قيمة النقاط:</span>
+                <span class="val-pts num" id="outPointsVal">158.64 USC</span>
+            </div>
+
+            <!-- الاسبريد -->
+            <div class="row">
+                <label class="label" for="inpSpread">الاسبريد:</label>
+                <div class="val-group">
+                    <input type="number" class="input-box w-spread num" id="inpSpread" value="240" step="1" inputmode="numeric" oninput="calculate()">
+                    <span class="unit-orange num">pts</span>
                 </div>
             </div>
 
-            <!-- خانة اللوت الاساسي (زر نسخ كبير للموبايل) -->
-            <button type="button" onclick="copyLot('outLot')"
-                class="w-full flex items-center justify-between bg-[#17212b] hover:bg-[#1d2a36] active:scale-[0.99] border border-[#2d3b4d] rounded-xl px-4 py-3.5 transition shadow-md">
-                <span class="text-base font-extrabold text-slate-200">اللوت:</span>
-                <div class="flex items-center gap-2">
-                    <span id="outLot" class="num text-xl font-extrabold text-[#4ade80]">0.12 Lot</span>
-                    <span class="text-[11px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded font-bold">نسخ</span>
+            <!-- خانة اللوت -->
+            <div class="result-box lot-box" onclick="copyValue('lot')">
+                <div>
+                    <span class="label">اللوت:</span>
+                    <span class="copy-hint">اضغط للنسخ</span>
                 </div>
-            </button>
+                <span class="lot-val num" id="outLot">0.12 Lot</span>
+            </div>
 
-            <!-- خانة ضعف اللوت (زر نسخ كبير للموبايل) -->
-            <button type="button" onclick="copyLot('outDoubleLot')"
-                class="w-full flex items-center justify-between bg-[#241922] hover:bg-[#2e202b] active:scale-[0.99] border border-[#422a38] rounded-xl px-4 py-3.5 transition shadow-md">
-                <span class="text-base font-extrabold text-slate-200">ضعف اللوت:</span>
-                <div class="flex items-center gap-2">
-                    <span id="outDoubleLot" class="num text-xl font-extrabold text-[#f87171]">0.24 Lot</span>
-                    <span class="text-[11px] bg-rose-500/20 text-rose-300 px-2 py-0.5 rounded font-bold">نسخ</span>
+            <!-- خانة ضعف اللوت -->
+            <div class="result-box double-lot-box" onclick="copyValue('double')">
+                <div>
+                    <span class="label">ضعف اللوت:</span>
+                    <span class="copy-hint">اضغط للنسخ</span>
                 </div>
-            </button>
+                <span class="double-lot-val num" id="outDoubleLot">0.24 Lot</span>
+            </div>
 
         </div>
     </div>
+
+    <!-- اشعار النسخ -->
+    <div class="toast" id="toast">تم النسخ</div>
 
     <script>
-        // تحميل القيم المحفوظة عند الفتح
-        window.addEventListener('DOMContentLoaded', () => {
+        let currentLot = 0.12;
+        let currentDoubleLot = 0.24;
+        let tesseractLoaded = false;
+
+        // التهيئة الفورية عند تحميل الصفحة
+        document.addEventListener('DOMContentLoaded', () => {
             try {
-                const saved = JSON.parse(localStorage.getItem('miniFiboCalc_v1'));
+                const saved = JSON.parse(localStorage.getItem('fibo_mini_data'));
                 if (saved) {
                     if (saved.percent) document.getElementById('inpPercent').value = saved.percent;
                     if (saved.balance) document.getElementById('inpBalance').value = saved.balance;
-                    if (saved.fiboPts) document.getElementById('inpFiboPts').value = saved.fiboPts;
+                    if (saved.price0 !== undefined) document.getElementById('inpPrice0').value = saved.price0;
+                    if (saved.price100 !== undefined) document.getElementById('inpPrice100').value = saved.price100;
                     if (saved.spread) document.getElementById('inpSpread').value = saved.spread;
+                }
+                const apiKey = localStorage.getItem('fibo_gemini_key');
+                if (apiKey) {
+                    document.getElementById('inpApiKey').value = apiKey;
                 }
             } catch (e) {}
             calculate();
         });
 
-        // اظهار او اخفاء حاسبة تحويل السعر الى نقاط
-        function togglePriceHelper() {
-            const box = document.getElementById('priceHelperBox');
-            const btn = document.getElementById('toggleModeBtn');
-            const isHidden = box.classList.contains('hidden');
-            box.classList.toggle('hidden', !isHidden);
-            btn.textContent = isHidden ? 'اخفاء السعر' : 'حساب من السعر';
+        // تنظيف النص الملصق من اي رموز او مسافات وتحويل الفاصلة العشرية
+        function parseCleanPrice(raw) {
+            if (!raw) return NaN;
+            const cleaned = String(raw).replace(/,/g, '.').replace(/[^0-9.]/g, '');
+            return parseFloat(cleaned);
         }
 
-        // تحويل فرق السعرين الى نقاط (1.00$ في الذهب = 100 نقطة)
-        function calcPointsFromPrices() {
-            const p1 = parseFloat(document.getElementById('inpPrice1').value);
-            const p2 = parseFloat(document.getElementById('inpPrice2').value);
-            if (!isNaN(p1) && !isNaN(p2) && p1 !== p2) {
-                const diff = Math.abs(p1 - p2);
-                // تحديد المضاعف تلقائيا حسب خانات السعر (ذهب 100، فوركس 100000، ين 1000)
-                let factor = 100;
-                if (p1 < 20) factor = 100000;
-                else if (p1 < 500) factor = 1000;
-                document.getElementById('inpFiboPts').value = Math.round(diff * factor);
-                calculate();
+        // تحويل فارق السعر الى نقاط المنصة القياسية (Gold XAUUSD / Cent / Forex)
+        function getPointsFromPrices(p1, p2) {
+            if (isNaN(p1) || isNaN(p2) || p1 <= 0 || p2 <= 0) return 0;
+            const diff = Math.abs(p1 - p2);
+            const maxPrice = Math.max(p1, p2);
+
+            // ازواج الفوركس 5 خانات عشرية (مثل 1.08540)
+            if (maxPrice < 20) {
+                return Math.round(diff * 100000);
             }
+            // ازواج الين 3 خانات عشرية (مثل 154.250)
+            if (maxPrice < 500) {
+                return Math.round(diff * 1000);
+            }
+            // الذهب والمؤشرات (فارق 13.22 يساوي 13220 نقطة كما في منصة الكمبيوتر)
+            return Math.round(diff * 1000);
         }
 
-        // المعادلة المطابقة للصورة تماما
-        function calculate(showAppliedToast = false) {
-            const percent = Math.max(0, parseFloat(document.getElementById('inpPercent').value) || 0);
-            const balance = Math.max(0, parseFloat(document.getElementById('inpBalance').value) || 0);
-            const fiboPts = Math.max(1, parseFloat(document.getElementById('inpFiboPts').value) || 1);
-            const spread = Math.max(0, parseFloat(document.getElementById('inpSpread').value) || 0);
+        // المعادلات الدقيقة لحاسبة السنت (USC) ومطابقة منصة الكمبيوتر
+        function calculate() {
+            const percent = parseFloat(document.getElementById('inpPercent').value) || 0;
+            const balance = parseFloat(document.getElementById('inpBalance').value) || 0;
+            const p1 = parseCleanPrice(document.getElementById('inpPrice0').value);
+            const p2 = parseCleanPrice(document.getElementById('inpPrice100').value);
 
-            // المستهدف = راس المال * النسبة %
-            const targetAmount = balance * (percent / 100);
+            const fiboPts = getPointsFromPrices(p1, p2);
+            document.getElementById('outFiboPts').textContent = `${fiboPts} pts`;
 
-            // قيمة النقطة للوت الواحد في حساب السنت (XAUUSDc): 0.10 USC لكل نقطة
+            // قيمة النقطة للوت الكامل 1.00 في حساب السنت = 0.10 USC
             const pointValuePerLot = 0.10;
 
-            // اللوت = المستهدف / (فيبو بالنقاط * 0.10) مقرب لاقرب 0.01
-            const rawLot = targetAmount / (fiboPts * pointValuePerLot);
-            const lot = Math.max(0.01, Math.round(rawLot * 100) / 100);
-            const doubleLot = Math.round((lot * 2) * 100) / 100;
+            // المستهدف = راس المال * النسبة / 100
+            const target = balance * (percent / 100);
+            document.getElementById('outTarget').textContent = `${target.toFixed(2)} (${percent.toFixed(1)}%)`;
 
-            // قيمة النقاط الفعلية = فيبو بالنقاط * 0.10 * اللوت
-            const actualPointsValue = fiboPts * pointValuePerLot * lot;
+            // حساب اللوت وتقريبه لاقرب 0.01
+            let lot = 0.01;
+            if (fiboPts > 0 && target > 0) {
+                const rawLot = target / (fiboPts * pointValuePerLot);
+                lot = Math.max(0.01, Math.round(rawLot * 100) / 100);
+            }
 
-            // تحديث الواجهة
-            document.getElementById('outTarget').textContent = `${targetAmount.toFixed(2)} (${percent.toFixed(1)}%)`;
-            document.getElementById('outPointsVal').textContent = `${actualPointsValue.toFixed(2)} USC`;
+            const doubleLot = lot * 2;
+            const pointsValue = lot * fiboPts * pointValuePerLot;
+
+            currentLot = lot;
+            currentDoubleLot = doubleLot;
+
+            document.getElementById('outPointsVal').textContent = `${pointsValue.toFixed(2)} USC`;
             document.getElementById('outLot').textContent = `${lot.toFixed(2)} Lot`;
             document.getElementById('outDoubleLot').textContent = `${doubleLot.toFixed(2)} Lot`;
 
-            // حفظ القيم محليا
+            saveState();
+        }
+
+        function clearPrice(id) {
+            const el = document.getElementById(id);
+            el.value = '';
+            el.focus();
+            calculate();
+        }
+
+        function applyAndSave() {
+            calculate();
+            showToast('تم تطبيق النسبة وتحديث اللوت');
+        }
+
+        function saveState() {
             try {
-                localStorage.setItem('miniFiboCalc_v1', JSON.stringify({
+                const data = {
                     percent: document.getElementById('inpPercent').value,
                     balance: document.getElementById('inpBalance').value,
-                    fiboPts: document.getElementById('inpFiboPts').value,
+                    price0: document.getElementById('inpPrice0').value,
+                    price100: document.getElementById('inpPrice100').value,
                     spread: document.getElementById('inpSpread').value
-                }));
+                };
+                localStorage.setItem('fibo_mini_data', JSON.stringify(data));
             } catch (e) {}
+        }
 
-            if (showAppliedToast) {
-                showToast(`تم التحديث: ${lot.toFixed(2)} Lot`);
+        function toggleApiSettings() {
+            const box = document.getElementById('apiBox');
+            box.classList.toggle('open');
+        }
+
+        function saveApiKey() {
+            const key = document.getElementById('inpApiKey').value.trim();
+            try {
+                localStorage.setItem('fibo_gemini_key', key);
+            } catch (e) {}
+            document.getElementById('apiBox').classList.remove('open');
+            showToast(key ? 'تم حفظ مفتاح Gemini' : 'تم مسح المفتاح');
+        }
+
+        // نسخ الرقم فقط إلى الحافظة بدون أي رموز إضافية
+        function copyValue(type) {
+            const val = type === 'double' ? currentDoubleLot.toFixed(2) : currentLot.toFixed(2);
+            const tempInput = document.createElement('input');
+            tempInput.value = val;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            tempInput.setSelectionRange(0, 99999);
+            try {
+                document.execCommand('copy');
+                showToast(`تم نسخ الرقم: ${val}`);
+            } catch (e) {
+                showToast(`الرقم: ${val}`);
             }
+            document.body.removeChild(tempInput);
         }
 
-        // نسخ رقم اللوت بضغطة واحدة
-        function copyLot(elementId) {
-            const rawText = document.getElementById(elementId).textContent;
-            const lotNumber = rawText.replace('Lot', '').trim();
-            const temp = document.createElement('input');
-            temp.value = lotNumber;
-            document.body.appendChild(temp);
-            temp.select();
-            document.execCommand('copy');
-            document.body.removeChild(temp);
-            showToast(`تم نسخ اللوت: ${lotNumber}`);
-        }
-
-        let toastTimeout;
         function showToast(msg) {
             const toast = document.getElementById('toast');
             toast.textContent = msg;
-            toast.classList.remove('hidden');
-            clearTimeout(toastTimeout);
-            toastTimeout = setTimeout(() => {
-                toast.classList.add('hidden');
+            toast.classList.add('show');
+            clearTimeout(window._toastTimer);
+            window._toastTimer = setTimeout(() => {
+                toast.classList.remove('show');
             }, 1800);
+        }
+
+        function setStatus(text, type = '') {
+            const el = document.getElementById('aiStatus');
+            el.textContent = text;
+            el.className = 'ai-status show ' + type;
+        }
+
+        function handleImageUpload(event) {
+            const file = event.target.files?.[0];
+            if (file) {
+                processChartImage(file);
+                event.target.value = '';
+            }
+        }
+
+        // تحويل وضغط الصورة قبل التحليل
+        function prepareImage(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const maxSide = 1400;
+                        let w = img.width;
+                        let h = img.height;
+                        if (w > maxSide || h > maxSide) {
+                            if (w > h) {
+                                h = Math.round((h * maxSide) / w);
+                                w = maxSide;
+                            } else {
+                                w = Math.round((w * maxSide) / h);
+                                h = maxSide;
+                            }
+                        }
+                        const canvas = document.createElement('canvas');
+                        canvas.width = w;
+                        canvas.height = h;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, w, h);
+                        const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+                        resolve({
+                            base64: dataUrl.split(',')[1],
+                            dataUrl
+                        });
+                    };
+                    img.onerror = reject;
+                    img.src = e.target.result;
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+
+        async function processChartImage(file) {
+            setStatus('جاري تحليل لقطة الشاشة واستخراج البيانات...');
+            let apiKey = '';
+            try {
+                apiKey = (localStorage.getItem('fibo_gemini_key') || document.getElementById('inpApiKey').value || '').trim();
+            } catch (e) {}
+
+            try {
+                const { base64, dataUrl } = await prepareImage(file);
+
+                if (apiKey) {
+                    const prompt = `Analyze this MetaTrader or TradingView chart screenshot. Extract:
+1. fibo_high: price at 0% or 100% Fibonacci top level (number or null)
+2. fibo_low: price at 0% or 100% Fibonacci bottom level (number or null)
+3. fibo_points: distance between 0% and 100% levels in broker points (integer: for Gold XAUUSD 0.01 = 1 point so 132.20 diff = 13220 points; for 5-digit forex 0.00001 = 1 point; for 3-digit JPY 0.001 = 1 point). If points are written on the chart, extract that integer.
+4. balance: account balance or equity number if visible (number or null)
+5. spread_points: spread in points if visible (integer or null)
+Return ONLY JSON.`;
+
+                    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(apiKey)}`;
+                    const res = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{
+                                role: 'user',
+                                parts: [
+                                    { text: prompt },
+                                    { inlineData: { mimeType: 'image/jpeg', data: base64 } }
+                                ]
+                            }],
+                            generationConfig: {
+                                responseMimeType: 'application/json',
+                                responseSchema: {
+                                    type: 'OBJECT',
+                                    properties: {
+                                        fibo_high: { type: 'NUMBER', nullable: true },
+                                        fibo_low: { type: 'NUMBER', nullable: true },
+                                        fibo_points: { type: 'INTEGER', nullable: true },
+                                        balance: { type: 'NUMBER', nullable: true },
+                                        spread_points: { type: 'INTEGER', nullable: true }
+                                    }
+                                }
+                            }
+                        })
+                    });
+
+                    if (res.ok) {
+                        const json = await res.json();
+                        const text = json?.candidates?.[0]?.content?.parts?.[0]?.text;
+                        if (text) {
+                            applyExtracted(JSON.parse(text));
+                            return;
+                        }
+                    }
+                }
+
+                // إذا لم يتوفر مفتاح API أو فشل الاتصال، نستخدم المحرك المحلي الذكي Tesseract.js
+                setStatus('جاري القراءة بالمحرك المحلي...');
+                await runLocalOCR(dataUrl);
+
+            } catch (err) {
+                setStatus('تعذر قراءة الصورة، تأكد من وضوح الأرقام', 'warn');
+            }
+        }
+
+        // تحميل Tesseract عند الحاجة فقط حتى لا يبطئ فتح الصفحة
+        function loadTesseractScript() {
+            return new Promise((resolve, reject) => {
+                if (window.Tesseract) {
+                    resolve();
+                    return;
+                }
+                const script = document.createElement('script');
+                script.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+                script.onload = () => {
+                    tesseractLoaded = true;
+                    resolve();
+                };
+                script.onerror = reject;
+                document.head.appendChild(script);
+            });
+        }
+
+        async function runLocalOCR(dataUrl) {
+            try {
+                await loadTesseractScript();
+                const result = await window.Tesseract.recognize(dataUrl, 'eng');
+                const text = result?.data?.text || '';
+
+                // استخراج عدد النقاط المباشر إن وجد
+                const ptsMatch = text.match(/(\d{3,6})\s*(pts|points)/i);
+                // استخراج أسعار الذهب أو المؤشرات (مثل 2750.00)
+                const priceMatches = [...text.matchAll(/\b([1-9]\d{2,4}\.\d{1,2})\b/g)].map(m => parseFloat(m[1]));
+                // استخراج أسعار الفوركس (مثل 1.08540)
+                const fxMatches = [...text.matchAll(/\b(\d\.\d{4,5})\b/g)].map(m => parseFloat(m[1]));
+
+                let fiboPts = null;
+                let high = null;
+                let low = null;
+
+                if (ptsMatch) {
+                    fiboPts = parseInt(ptsMatch[1], 10);
+                } else if (priceMatches.length >= 2) {
+                    const unique = [...new Set(priceMatches)].sort((a, b) => b - a);
+                    high = unique[0];
+                    low = unique[unique.length - 1];
+                    fiboPts = Math.round((high - low) * 100);
+                } else if (fxMatches.length >= 2) {
+                    const unique = [...new Set(fxMatches)].sort((a, b) => b - a);
+                    high = unique[0];
+                    low = unique[unique.length - 1];
+                    fiboPts = Math.round((high - low) * 100000);
+                }
+
+                if (fiboPts && fiboPts > 5) {
+                    applyExtracted({ fibo_high: high, fibo_low: low, fibo_points: fiboPts });
+                } else {
+                    setStatus('أضف مفتاح Gemini من الترس ⚙️ لقراءة أدق للشارت', 'warn');
+                }
+            } catch (e) {
+                setStatus('أضف مفتاح Gemini من الترس ⚙️ لقراءة الصور', 'warn');
+            }
+        }
+
+        function applyExtracted(data) {
+            const notes = [];
+
+            if (data.fibo_high && data.fibo_low) {
+                document.getElementById('inpPrice0').value = data.fibo_high;
+                document.getElementById('inpPrice100').value = data.fibo_low;
+                const pts = getPointsFromPrices(data.fibo_high, data.fibo_low);
+                if (pts > 0) notes.push(`فيبو: ${pts} pts`);
+            } else if (data.fibo_points && data.fibo_points > 0) {
+                const basePrice = 2650.00;
+                const diff = data.fibo_points / 1000;
+                document.getElementById('inpPrice0').value = basePrice.toFixed(2);
+                document.getElementById('inpPrice100').value = (basePrice - diff).toFixed(2);
+                notes.push(`فيبو: ${Math.round(data.fibo_points)} pts`);
+            }
+
+            if (data.balance && data.balance > 0) {
+                document.getElementById('inpBalance').value = data.balance.toFixed(2);
+                notes.push(`الرصيد: ${data.balance.toFixed(2)}`);
+            }
+
+            if (data.spread_points && data.spread_points > 0) {
+                document.getElementById('inpSpread').value = Math.round(data.spread_points);
+                notes.push(`الاسبريد: ${Math.round(data.spread_points)}`);
+            }
+
+            calculate();
+
+            if (notes.length > 0) {
+                setStatus(`تم الاستخراج: ${notes.join(' | ')}`, 'success');
+            } else {
+                setStatus('لم يتم العثور على مستويات واضحة في الصورة', 'warn');
+            }
         }
     </script>
 </body>
